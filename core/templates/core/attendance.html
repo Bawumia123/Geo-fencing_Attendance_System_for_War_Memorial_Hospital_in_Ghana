@@ -1,0 +1,168 @@
+{% extends "base_admin.html" %}
+{% block title %}Attendance{% endblock %}
+{% block nav_attendance %}active{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between px-8 py-5 border-b border-white/10 flex-shrink-0">
+    <div>
+        <h1 class="text-2xl font-bold text-white">Attendance</h1>
+        <p class="text-gray-500 text-sm">{{ today|date:"l, F j, Y" }}</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {{ today|date:"M j, Y" }}
+        </div>
+        <select class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500">
+            <option>All Departments</option>
+            {% for dept in departments %}
+            <option>{{ dept.1 }}</option>
+            {% endfor %}
+        </select>
+        <a href="{% url 'mark_attendance' %}" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Mark Attendance
+        </a>
+        <button id="notif-bell" class="relative p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span id="notif-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center {% if not unread_count %}hidden{% endif %}">
+                {{ unread_count|default:'' }}
+            </span>
+        </button>
+    </div>
+</div>
+
+<div class="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-4 gap-4">
+        <div class="stat-card rounded-xl p-5">
+            <div class="flex items-start justify-between">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-medium">Total Staff</p>
+                <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4.13a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-white mt-3">{{ total_staff }}</p>
+            <p class="text-gray-500 text-xs mt-1">Registered employees</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+            <div class="flex items-start justify-between">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-medium">Present Today</p>
+                <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-white mt-3">{{ present_today }}</p>
+            <p class="text-green-400 text-xs mt-1">{{ attendance_rate }}% attendance rate</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+            <div class="flex items-start justify-between">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-medium">Absent Today</p>
+                <div class="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-white mt-3">{{ absent_today }}</p>
+            <p class="text-red-400 text-xs mt-1">Not yet clocked in</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+            <div class="flex items-start justify-between">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-medium">Out of Bounds</p>
+                <div class="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-white mt-3">{{ out_of_bounds_today }}</p>
+            <p class="text-orange-400 text-xs mt-1">Outside geofence</p>
+        </div>
+    </div>
+
+    <!-- Weekly Grid -->
+    <div class="stat-card rounded-xl p-5">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <h2 class="text-white font-semibold">Staff Attendance</h2>
+                <span class="text-gray-500 text-xs">This week</span>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-sm inline-block"></span> Present</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-sm inline-block"></span> Out of Bounds</span>
+            </div>
+        </div>
+        {% include "core/partials/weekly_grid.html" %}
+    </div>
+
+    <!-- Today's Log -->
+    <div class="stat-card rounded-xl p-5">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-white font-semibold">Today's Log</h2>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="search-input" placeholder="Search employee..." class="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 w-48">
+                </div>
+                <a href="{% url 'attendance_export' %}" class="flex items-center gap-2 bg-white/5 border border-white/10 text-gray-300 text-sm px-3 py-2 rounded-lg hover:bg-white/10 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export CSV
+                </a>
+            </div>
+        </div>
+
+        <table class="w-full text-sm" id="attendance-table">
+            <thead>
+                <tr class="border-b border-white/10">
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Employee</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Department</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Status</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Check In</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Distance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5" id="table-body">
+                {% for record in today_records %}
+                <tr class="hover:bg-white/3 transition attendance-row">
+                    <td class="py-3 pr-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                {{ record.staff.first_name|first|default:record.staff.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-white text-sm font-medium employee-name">{{ record.staff.get_full_name|default:record.staff.username }}</p>
+                                <p class="text-gray-500 text-xs">{{ record.staff.profile.get_department_display|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-sm">{{ record.staff.profile.get_department_display|default:"—" }}</td>
+                    <td class="py-3">
+                        {% if record.status == "Present" %}
+                        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">Present</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">Out of Bounds</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 text-gray-300 text-sm font-mono">{{ record.timestamp|date:"H:i" }}</td>
+                    <td class="py-3 text-gray-400 text-sm">{{ record.distance_from_center|floatformat:0 }}m</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-12 text-center text-gray-600">No attendance records for today yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('search-input').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.attendance-row').forEach(row => {
+            const name = row.querySelector('.employee-name').textContent.toLowerCase();
+            row.style.display = name.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

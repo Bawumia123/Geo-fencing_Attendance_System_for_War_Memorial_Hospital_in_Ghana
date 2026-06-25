@@ -1,0 +1,90 @@
+{% extends "base_staff.html" %}
+{% block title %}My Records{% endblock %}
+{% block nav_my_records %}active{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between px-8 py-5 border-b border-white/10 flex-shrink-0">
+    <div>
+        <h1 class="text-2xl font-bold text-white">My Attendance</h1>
+        <p class="text-gray-500 text-sm">{{ user.get_full_name|default:user.username }} &mdash; {{ user.profile.get_department_display|default:"Staff" }}</p>
+    </div>
+    <a href="{% url 'mark_attendance' %}" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Clock In
+    </a>
+</div>
+
+<div class="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-3 gap-4">
+        <div class="stat-card rounded-xl p-5">
+            <p class="text-gray-500 text-xs uppercase tracking-wider font-medium mb-3">Total Check-ins</p>
+            <p class="text-4xl font-bold text-white">{{ total_records }}</p>
+            <p class="text-gray-500 text-xs mt-1">All time</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+            <p class="text-gray-500 text-xs uppercase tracking-wider font-medium mb-3">This Month</p>
+            <p class="text-4xl font-bold text-white">{{ this_month }}</p>
+            <p class="text-green-400 text-xs mt-1">Successful check-ins</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+            <p class="text-gray-500 text-xs uppercase tracking-wider font-medium mb-3">Out of Bounds</p>
+            <p class="text-4xl font-bold text-white">{{ out_of_bounds }}</p>
+            <p class="text-orange-400 text-xs mt-1">Failed attempts</p>
+        </div>
+    </div>
+
+    <!-- Records Table -->
+    <div class="stat-card rounded-xl p-5">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-white font-semibold">Attendance History</h2>
+            <div class="relative">
+                <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="record-search" placeholder="Search by date..." class="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 w-48">
+            </div>
+        </div>
+
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-white/10">
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Date</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Time</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Status</th>
+                    <th class="text-left text-gray-500 text-xs font-medium pb-3 uppercase tracking-wider">Distance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for record in records %}
+                <tr class="hover:bg-white/3 transition record-row">
+                    <td class="py-3 text-gray-300 text-sm record-date">{{ record.timestamp|date:"M j, Y" }}</td>
+                    <td class="py-3 text-gray-300 text-sm font-mono">{{ record.timestamp|date:"H:i" }}</td>
+                    <td class="py-3">
+                        {% if record.status == "Present" %}
+                        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">Present</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">Out of Bounds</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 text-gray-400 text-sm">{{ record.distance_from_center|floatformat:0 }}m</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="py-12 text-center text-gray-600">No attendance records yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('record-search').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.record-row').forEach(row => {
+            const date = row.querySelector('.record-date').textContent.toLowerCase();
+            row.style.display = date.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

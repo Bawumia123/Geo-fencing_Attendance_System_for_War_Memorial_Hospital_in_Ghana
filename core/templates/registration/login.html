@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — War Memorial Hospital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #0d1117; }</style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-4">
+
+    <div class="w-full max-w-sm">
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-8">
+            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </div>
+            <h1 class="text-white text-2xl font-bold">War Memorial Hospital</h1>
+            <p class="text-gray-500 text-sm mt-1">Staff Attendance System</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-gray-900 border border-white/10 rounded-2xl p-8">
+            <h2 class="text-white text-lg font-semibold mb-1">Welcome back</h2>
+            <p class="text-gray-500 text-sm mb-6">Sign in to your staff account</p>
+
+            {% if form.errors %}
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">
+                Invalid username or password.
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-gray-400 text-xs font-medium mb-1.5 uppercase tracking-wider">Username</label>
+                    <input type="text" name="username" autofocus required
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Enter your username">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-medium mb-1.5 uppercase tracking-wider">Password</label>
+                    <input type="password" name="password" required
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Enter your password">
+                </div>
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition mt-2">
+                    Sign In
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-gray-700 text-xs mt-6">&copy; {% now "Y" %} War Memorial Hospital &mdash; Attendance System</p>
+    </div>
+
+</body>
+</html>

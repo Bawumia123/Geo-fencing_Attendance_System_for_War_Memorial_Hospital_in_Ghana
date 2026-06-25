@@ -1,0 +1,101 @@
+{% extends "base_admin.html" %}
+{% block title %}Staff{% endblock %}
+{% block nav_staff %}active{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between px-8 py-5 border-b border-white/10 flex-shrink-0">
+    <div>
+        <h1 class="text-2xl font-bold text-white">Staff</h1>
+        <p class="text-gray-500 text-sm">{{ total_staff }} registered employees</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <div class="relative">
+            <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="staff-search" placeholder="Search staff..." class="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 w-56">
+        </div>
+        <select id="dept-filter" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500">
+            <option value="">All Departments</option>
+            {% for code, name in departments %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <a href="{% url 'create_staff' %}" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Add Staff
+        </a>
+    </div>
+</div>
+
+<div class="flex-1 overflow-y-auto px-8 py-6">
+    <div class="stat-card rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-white/10">
+                    <th class="text-left text-gray-500 text-xs font-medium py-3 px-5 uppercase tracking-wider">Employee</th>
+                    <th class="text-left text-gray-500 text-xs font-medium py-3 uppercase tracking-wider">Department</th>
+                    <th class="text-left text-gray-500 text-xs font-medium py-3 uppercase tracking-wider">Last Seen</th>
+                    <th class="text-left text-gray-500 text-xs font-medium py-3 uppercase tracking-wider">Status</th>
+                    <th class="text-left text-gray-500 text-xs font-medium py-3 uppercase tracking-wider">Total Records</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5" id="staff-table">
+                {% for member in staff_data %}
+                <tr class="hover:bg-white/3 transition staff-row">
+                    <td class="py-3 px-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                {{ member.user.first_name|first|default:member.user.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-white font-medium staff-name">{{ member.user.get_full_name|default:member.user.username }}</p>
+                                <p class="text-gray-500 text-xs">@{{ member.user.username }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 staff-dept">
+                        <span class="px-2 py-1 bg-blue-500/10 text-blue-300 text-xs rounded-full border border-blue-500/20">
+                            {{ member.get_department_display }}
+                        </span>
+                    </td>
+                    <td class="py-3 text-gray-400 text-sm">
+                        {% if member.last_seen %}{{ member.last_seen|date:"M j, H:i" }}{% else %}<span class="text-gray-600">Never</span>{% endif %}
+                    </td>
+                    <td class="py-3">
+                        {% if member.clocked_in_today %}
+                        <span class="flex items-center gap-1.5 text-green-400 text-xs"><span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>Present</span>
+                        {% else %}
+                        <span class="flex items-center gap-1.5 text-gray-600 text-xs"><span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block"></span>Not yet</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 text-gray-400 text-sm">{{ member.total_records }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-12 text-center text-gray-600">No staff found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('staff-search');
+    const deptFilter = document.getElementById('dept-filter');
+
+    function filterTable() {
+        const query = searchInput.value.toLowerCase();
+        const dept = deptFilter.value.toLowerCase();
+        document.querySelectorAll('.staff-row').forEach(row => {
+            const name = row.querySelector('.staff-name').textContent.toLowerCase();
+            const rowDept = row.querySelector('.staff-dept').textContent.toLowerCase();
+            const matchName = name.includes(query);
+            const matchDept = dept === '' || rowDept.includes(dept);
+            row.style.display = (matchName && matchDept) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    deptFilter.addEventListener('change', filterTable);
+</script>
+{% endblock %}
