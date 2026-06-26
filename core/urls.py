@@ -7,7 +7,8 @@ urlpatterns = [
     # Admin views
     path('dashboard/', views.dashboard, name='dashboard'),
     path('attendance/', views.attendance_view, name='attendance'),
-    path('attendance/export/', views.attendance_export, name='attendance_export'),
+    path('attendance/export/daily/', views.attendance_export_daily, name='attendance_export_daily'),
+    path('attendance/export/weekly/', views.attendance_export_weekly, name='attendance_export_weekly'),
     path('staff/', views.staff_list, name='staff_list'),
     path('staff/create/', views.create_staff, name='create_staff'),
 
